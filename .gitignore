@@ -36,6 +36,9 @@ out/
 # VS Code
 .vscode/
 
+# Cursor IDE
+.cursor/
+
 # Mac
 .DS_Store
 
