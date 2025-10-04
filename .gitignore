@@ -70,3 +70,6 @@ target/
 application-local.properties
 application-dev.properties
 application-prod.properties
+
+# Documentation folder
+doc/
