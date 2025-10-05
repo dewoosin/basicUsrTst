@@ -1,0 +1,247 @@
+/* 회원가입 페이지 전용 스타일 */
+.login-container {
+    max-width: 900px; /* 로그인 컨테이너 너비 오버라이드 */
+}
+
+.signup-card {
+    max-width: 900px; /* 회원가입 카드를 더 넓게 */
+}
+
+.form-row {
+    display: flex;
+    gap: 30px; /* 간격도 좀 더 넓게 */
+    margin-bottom: 20px;
+}
+
+.form-row .form-group {
+    flex: 1; /* 각 폼 그룹이 동일한 너비를 가지도록 */
+}
+
+/* 중복확인 버튼이 있는 입력 그룹 */
+.input-group-with-button {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.input-group-with-button .input-group {
+    flex: 1;
+}
+
+.check-btn {
+    padding: 12px 16px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    min-width: 80px;
+    position: relative;
+}
+
+.check-btn:hover {
+    background: #5a6fd8;
+    transform: translateY(-1px);
+}
+
+.check-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.check-btn .loading-icon {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.check-result {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.check-result.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.check-result.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.check-result.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.form-help {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.agree-terms {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.4;
+    margin-bottom: 25px;
+}
+
+.agree-terms input {
+    margin-right: 8px;
+    margin-top: 2px;
+}
+
+.terms-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.terms-link:hover {
+    text-decoration: underline;
+}
+
+/* 비밀번호 강도 표시 */
+.password-strength {
+    margin-top: 5px;
+    font-size: 0.8rem;
+}
+
+.strength-weak { color: #dc3545; }
+.strength-medium { color: #ffc107; }
+.strength-strong { color: #28a745; }
+
+/* 폼 유효성 검사 스타일 */
+.form-group.error input {
+    border-color: #dc3545;
+}
+
+.form-group.success input {
+    border-color: #28a745;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 5px;
+}
+
+.success-message {
+    color: #28a745;
+    font-size: 0.8rem;
+    margin-top: 5px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-row .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .input-group-with-button {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .check-btn {
+        align-self: flex-start;
+        min-width: auto;
+        width: fit-content;
+    }
+    
+    .login-container {
+        max-width: 400px;
+    }
+    
+    .signup-card {
+        max-width: 400px;
+    }
+}
+
+@media (max-width: 480px) {
+    .signup-card {
+        padding: 30px 20px;
+    }
+}
+
+/* 아이디 중복 확인 관련 스타일 */
+.input-group-with-button {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.input-group {
+    flex: 1;
+}
+
+.check-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.check-btn:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.check-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.check-result {
+    margin-top: 5px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.check-result.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.check-result.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.loading-icon {
+    display: none;
+}

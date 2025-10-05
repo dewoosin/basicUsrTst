@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.nsustest.loginAuth.dao.LoginDao">
+    
+    <!-- 아이디 중복 확인 쿼리 -->
+    <select id="checkIdDuplicate" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+        FROM users
+        WHERE usr_login_id = #{usrLoginId}
+    </select>
+    
+    <!-- 이메일 중복 확인 쿼리 -->
+    <select id="checkEmailDuplicate" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+        FROM users
+        WHERE email = #{email}
+    </select>
+    
+    <!-- 사용자 정보 저장 쿼리 -->
+    <insert id="insertUser" parameterType="map" useGeneratedKeys="true" keyProperty="usrId">
+        INSERT INTO users (usr_login_id, usr_nm, email, pwd, usr_tp_cd, phone_num, is_use, cre_dt, upd_dt)
+        VALUES (#{usrLoginId}, #{usrNm}, #{email}, #{password}, '02', #{phoneNum}, TRUE, NOW(), NOW())
+    </insert>
+    
+    <!-- 로그인 아이디로 사용자 정보 조회 쿼리 -->
+    <select id="findByLoginId" parameterType="string" resultType="map">
+        SELECT usr_id, usr_login_id, usr_nm, email, pwd, usr_tp_cd, phone_num, is_use, cre_dt, upd_dt
+        FROM users
+        WHERE usr_login_id = #{usrLoginId}
+    </select>
+    
+    <!-- 사용자 ID로 사용자 정보 조회 쿼리 -->
+    <select id="findById" parameterType="long" resultType="map">
+        SELECT usr_id, usr_login_id, usr_nm, email, pwd, usr_tp_cd, phone_num, is_use, cre_dt, upd_dt
+        FROM users
+        WHERE usr_id = #{usrId}
+    </select>
+    
+    <!-- 사용자 통계 초기화 쿼리 (회원가입 시) -->
+    <insert id="insertUserStats" parameterType="map">
+        INSERT INTO user_stats (usr_id, total_login_cnt, failed_login_cnt, is_locked, cre_dt, upd_dt)
+        VALUES (#{usrId}, 0, 0, FALSE, NOW(), NOW())
+    </insert>
+    
+    <!-- 사용자 통계 업데이트 쿼리 (로그인 성공 시) -->
+    <update id="updateUserStats" parameterType="map">
+        UPDATE user_stats 
+        SET total_login_cnt = total_login_cnt + 1,
+            last_login_dt = NOW(),
+            last_login_ip = #{ipAddr},
+            failed_login_cnt = 0,
+            upd_dt = NOW()
+        WHERE usr_id = #{usrId}
+    </update>
+    
+    <!-- 사용자 세션 저장 쿼리 (로그인 시) -->
+    <insert id="insertUserSession" parameterType="map" useGeneratedKeys="true" keyProperty="sessionId">
+        INSERT INTO user_sessions (usr_id, access_token, refresh_token, ip_addr, user_agent, login_dt, exp_dt, is_active, cre_dt, upd_dt)
+        VALUES (#{usrId}, #{accessToken}, #{refreshToken}, #{ipAddr}, #{userAgent}, NOW(), #{expDt}, TRUE, NOW(), NOW())
+    </insert>
+    
+    <!-- 기존 활성 세션 삭제 쿼리 (다중 로그인 방지) -->
+    <delete id="deleteActiveSessions" parameterType="long">
+        DELETE FROM user_sessions 
+        WHERE usr_id = #{usrId} AND is_active = TRUE
+    </delete>
+    
+    <!-- 세션 로그아웃 처리 쿼리 -->
+    <update id="updateSessionLogout" parameterType="map">
+        UPDATE user_sessions 
+        SET is_active = FALSE,
+            logout_dt = NOW(),
+            session_dur_sec = TIMESTAMPDIFF(SECOND, login_dt, NOW()),
+            upd_dt = NOW()
+        WHERE usr_id = #{usrId} 
+        AND is_active = TRUE
+        ORDER BY login_dt DESC 
+        LIMIT 1
+    </update>
+    
+    <!-- Refresh Token으로 세션 조회 쿼리 -->
+    <select id="findSessionByRefreshToken" parameterType="string" resultType="map">
+        SELECT us.session_id, us.usr_id, us.access_token, us.refresh_token, us.ip_addr, us.login_dt, us.exp_dt, us.is_active,
+               u.usr_login_id, u.usr_nm, u.email, u.usr_tp_cd, u.phone_num, u.is_use
+        FROM user_sessions us
+        JOIN users u ON us.usr_id = u.usr_id
+        WHERE us.refresh_token = #{refreshToken} 
+        AND us.is_active = TRUE 
+        AND us.exp_dt &gt; NOW()
+    </select>
+    
+    
+    <!-- 로그인 이력 저장 쿼리 (성공/실패 통합) -->
+    <insert id="insertLoginHistory" parameterType="map" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO login_history (usr_id, usr_login_id, ip_addr, login_dt, is_success, fail_reason, user_agent, attempt_cnt, is_blocked, blocked_until_dt, cre_dt, upd_dt)
+        VALUES (#{usrId}, #{usrLoginId}, #{ipAddr}, NOW(), #{isSuccess}, #{failReason}, #{userAgent}, #{attemptCnt}, #{isBlocked}, #{blockedUntilDt}, NOW(), NOW())
+    </insert>
+    
+    <!-- IP별 로그인 시도 횟수 조회 쿼리 -->
+    <select id="getLoginAttemptCount" parameterType="string" resultType="int">
+        SELECT COALESCE(MAX(attempt_cnt), 0)
+        FROM login_history
+        WHERE ip_addr = #{ipAddr}
+        AND login_dt &gt;= DATE_SUB(NOW(), INTERVAL 1 HOUR)
+    </select>
+    
+    <!-- IP 차단 상태 확인 쿼리 -->
+    <select id="checkIpBlocked" parameterType="string" resultType="map">
+        SELECT ip_addr, MAX(attempt_cnt) as attempt_cnt, MAX(is_blocked) as is_blocked, MAX(blocked_until_dt) as blocked_until_dt
+        FROM login_history
+        WHERE ip_addr = #{ipAddr}
+        AND login_dt &gt;= DATE_SUB(NOW(), INTERVAL 1 HOUR)
+        AND is_blocked = TRUE
+        AND blocked_until_dt &gt; NOW()
+        GROUP BY ip_addr
+        LIMIT 1
+    </select>
+    
+    <!-- 로그인 성공 시 IP 차단 해제 쿼리 -->
+    <update id="resetIpBlock" parameterType="string">
+        UPDATE login_history 
+        SET is_blocked = FALSE,
+            blocked_until_dt = NULL,
+            upd_dt = NOW()
+        WHERE ip_addr = #{ipAddr}
+        AND is_blocked = TRUE
+    </update>
+    
+    <!-- 만료된 세션 정리 쿼리 -->
+    <delete id="cleanupExpiredSessions">
+        DELETE FROM user_sessions 
+        WHERE exp_dt &lt; NOW() OR (is_active = FALSE AND logout_dt &lt; DATE_SUB(NOW(), INTERVAL 7 DAY))
+    </delete>
+    
+    <!-- 오래된 로그인 이력 삭제 쿼리 -->
+    <delete id="cleanupOldLoginHistory">
+        DELETE FROM login_history 
+        WHERE login_dt &lt; DATE_SUB(NOW(), INTERVAL 6 MONTH)
+    </delete>
+    
+    <!-- ==================== Rate-Limiting 관련 쿼리 ==================== -->
+    
+    <!-- Rate-Limit 초과 이력 저장 쿼리 -->
+    <insert id="insertRateLimitHistory" parameterType="map" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO rate_limit_history (ip_addr, limit_type, reason, block_dt, cre_dt, upd_dt)
+        VALUES (#{ipAddr}, #{limitType}, #{reason}, #{blockDt}, NOW(), NOW())
+    </insert>
+    
+    <!-- IP별 Rate-Limit 통계 조회 쿼리 -->
+    <select id="getRateLimitStats" parameterType="string" resultType="map">
+        SELECT 
+            COUNT(*) as total_violations,
+            COUNT(CASE WHEN limit_type = 'MINUTE_LIMIT' THEN 1 END) as minute_violations,
+            COUNT(CASE WHEN limit_type = 'HOUR_LIMIT' THEN 1 END) as hour_violations,
+            COUNT(CASE WHEN limit_type = 'DAY_LIMIT' THEN 1 END) as day_violations,
+            COUNT(CASE WHEN limit_type LIKE 'LOGIN_%' THEN 1 END) as login_violations,
+            MAX(block_dt) as last_violation_dt
+        FROM rate_limit_history
+        WHERE ip_addr = #{ipAddr}
+        AND block_dt &gt;= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+    </select>
+    
+    <!-- 오래된 Rate-Limit 이력 삭제 쿼리 -->
+    <delete id="cleanupOldRateLimitHistory">
+        DELETE FROM rate_limit_history 
+        WHERE block_dt &lt; DATE_SUB(NOW(), INTERVAL 7 DAY)
+    </delete>
+    
+</mapper>
