@@ -33,6 +33,9 @@ public class LoginService {
     @Autowired
     private JwtUtil jwtUtil;
     
+    @Autowired
+    private CommonCodeService commonCodeService;
+    
     /**
      * 아이디 중복 확인
      * 
@@ -56,9 +59,9 @@ public class LoginService {
             data.put("usrLoginId", usrLoginId);
             
             if (isDuplicate) {
-                return ApiResponse.error(ErrorCode.getDescription(ErrorCode.USER_ID_DUPLICATE), ErrorCode.USER_ID_DUPLICATE);
+                return ApiResponse.error(getMessage("USER_003"), ErrorCode.USER_ID_DUPLICATE);
             } else {
-                return ApiResponse.success("사용 가능한 아이디입니다.", data);
+                return ApiResponse.success(getMessage("SERVICE_001"), data);
             }
             
         } catch (Exception e) {
@@ -117,9 +120,9 @@ public class LoginService {
                 responseData.put("usrLoginId", usrLoginId);
                 responseData.put("email", email);
                 
-                return ApiResponse.success("회원가입이 완료되었습니다!", responseData);
+                return ApiResponse.success(getMessage("SERVICE_002"), responseData);
             } else {
-                return ApiResponse.error("회원가입에 실패했습니다.", ErrorCode.SERVER_INTERNAL_ERROR);
+                return ApiResponse.error(getMessage("SERVICE_003"), ErrorCode.SERVER_INTERNAL_ERROR);
             }
             
         } catch (Exception e) {
@@ -154,7 +157,7 @@ public class LoginService {
             if (ipAddr != null) {
                 Map<String, Object> blockedInfo = loginDao.checkIpBlocked(ipAddr);
                 if (blockedInfo != null) {
-                    return ApiResponse.error("로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.", ErrorCode.AUTH_ACCOUNT_DISABLED);
+                    return ApiResponse.error(getMessage("SERVICE_004"), ErrorCode.AUTH_ACCOUNT_DISABLED);
                 }
             }
             
@@ -165,7 +168,7 @@ public class LoginService {
                 if (ipAddr != null) {
                     recordLoginFailure(usrLoginId, ipAddr, "사용자 없음");
                 }
-                return ApiResponse.error("아이디 또는 비밀번호가 올바르지 않습니다.", ErrorCode.AUTH_INVALID_CREDENTIALS);
+                return ApiResponse.error(getMessage("AUTH_001"), ErrorCode.AUTH_INVALID_CREDENTIALS);
             }
             
             // 계정 상태 및 비밀번호 검증
@@ -209,7 +212,7 @@ public class LoginService {
                 "email", user.get("email")
             ));
             
-            return ApiResponse.success("로그인되었습니다.", authData);
+            return ApiResponse.success(getMessage("SERVICE_005"), authData);
             
         } catch (Exception e) {
             logger.error("로그인 중 예외 발생: {}", e.getMessage(), e);
@@ -228,10 +231,10 @@ public class LoginService {
         }
         
         if (!usrLoginId.matches("^[a-zA-Z0-9]{4,20}$")) {
-            return ApiResponse.error("아이디는 영문, 숫자 조합 4-20자로 입력해주세요.", ErrorCode.VALIDATION_INVALID_FORMAT);
+            return ApiResponse.error(getMessage("SERVICE_006"), ErrorCode.VALIDATION_INVALID_FORMAT);
         }
         
-        return ApiResponse.success("유효한 아이디입니다.", null);
+        return ApiResponse.success(getMessage("SERVICE_007"), null);
     }
     
     /**
@@ -260,7 +263,7 @@ public class LoginService {
         }
         
         if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
-            return ApiResponse.error("올바른 이메일 형식이 아닙니다.", ErrorCode.VALIDATION_INVALID_FORMAT);
+            return ApiResponse.error(getMessage("SERVICE_008"), ErrorCode.VALIDATION_INVALID_FORMAT);
         }
         
         // 비밀번호 검증
@@ -269,10 +272,10 @@ public class LoginService {
         }
         
         if (!password.matches("^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$")) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.PASSWORD_TOO_WEAK), ErrorCode.PASSWORD_TOO_WEAK);
+            return ApiResponse.error(getMessage("PWD_005"), ErrorCode.PASSWORD_TOO_WEAK);
         }
         
-        return ApiResponse.success("유효한 회원가입 데이터입니다.", null);
+        return ApiResponse.success(getMessage("SERVICE_009"), null);
     }
     
     /**
@@ -290,7 +293,7 @@ public class LoginService {
             return ApiResponse.error(ErrorCode.getDescription(ErrorCode.VALIDATION_REQUIRED_FIELD), ErrorCode.VALIDATION_REQUIRED_FIELD);
         }
         
-        return ApiResponse.success("유효한 로그인 데이터입니다.", null);
+        return ApiResponse.success(getMessage("SERVICE_010"), null);
     }
     
     /**
@@ -300,20 +303,20 @@ public class LoginService {
         // 아이디 중복 확인
         int idCount = loginDao.checkIdDuplicate(usrLoginId);
         if (idCount > 0) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.USER_ID_DUPLICATE), ErrorCode.USER_ID_DUPLICATE);
+            return ApiResponse.error(getMessage("USER_003"), ErrorCode.USER_ID_DUPLICATE);
         }
         
         // 이메일 중복 확인
         int emailCount = loginDao.checkEmailDuplicate(email);
         if (emailCount > 0) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.USER_EMAIL_DUPLICATE), ErrorCode.USER_EMAIL_DUPLICATE);
+            return ApiResponse.error(getMessage("USER_004"), ErrorCode.USER_EMAIL_DUPLICATE);
         }
         
         // 성공 응답
         Map<String, Object> data = new HashMap<>();
         data.put("usrLoginId", usrLoginId);
         data.put("email", email);
-        return ApiResponse.success("중복 확인 완료", data);
+        return ApiResponse.success(getMessage("SERVICE_011"), data);
     }
     
     /**
@@ -332,16 +335,16 @@ public class LoginService {
         }
         
         if (!isUse) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.AUTH_ACCOUNT_DISABLED), ErrorCode.AUTH_ACCOUNT_DISABLED);
+            return ApiResponse.error(getMessage("AUTH_003"), ErrorCode.AUTH_ACCOUNT_DISABLED);
         }
         
         // 비밀번호 확인
         String storedPassword = (String) user.get("pwd");
         if (!passwordEncoder.matches(password, storedPassword)) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.AUTH_INVALID_CREDENTIALS), ErrorCode.AUTH_INVALID_CREDENTIALS);
+            return ApiResponse.error(getMessage("AUTH_001"), ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
         
-        return ApiResponse.success("인증이 완료되었습니다.", null);
+        return ApiResponse.success(getMessage("SERVICE_012"), null);
     }
     
     /**
@@ -350,7 +353,7 @@ public class LoginService {
      * @param refreshToken Refresh Token
      * @return 새로운 Access Token 및 Refresh Token
      */
-    public Map<String, Object> refreshAccessToken(String refreshToken) {
+    public ApiResponse<Map<String, Object>> refreshAccessToken(String refreshToken) {
         try {
             logger.info("=== 토큰 재발급 시작 ===");
             logger.debug("Refresh Token: {}", refreshToken);
@@ -358,14 +361,14 @@ public class LoginService {
             // Refresh Token으로 세션 검증
             Map<String, Object> sessionInfo = loginDao.findSessionByRefreshToken(refreshToken);
             if (sessionInfo == null) {
-                return createErrorResponse("유효하지 않은 Refresh Token입니다.");
+                return ApiResponse.error(getMessage("SERVICE_013"), ErrorCode.AUTH_REFRESH_TOKEN_INVALID);
             }
             
             // 사용자 정보 조회
             Long usrId = ((Number) sessionInfo.get("usr_id")).longValue();
             Map<String, Object> user = loginDao.findById(usrId);
             if (user == null) {
-                return createErrorResponse("사용자 정보를 찾을 수 없습니다.");
+                return ApiResponse.error(getMessage("SERVICE_014"), ErrorCode.USER_NOT_FOUND);
             }
             
             // 새로운 Access Token 생성
@@ -378,18 +381,18 @@ public class LoginService {
             loginDao.deleteActiveSessions(usrId);
             saveUserSession(usrId, newAccessToken, newRefreshToken, null, null);
             
-            // 성공 응답
-            Map<String, Object> response = createSuccessResponse("토큰이 재발급되었습니다.");
-            response.put("accessToken", newAccessToken);
-            response.put("refreshToken", newRefreshToken);
-            response.put("tokenType", "Bearer");
-            response.put("expiresIn", jwtUtil.getAccessTokenExpirationInSeconds()); // 15분 (초 단위)
+            // 성공 응답 데이터 생성
+            Map<String, Object> tokenData = new HashMap<>();
+            tokenData.put("accessToken", newAccessToken);
+            tokenData.put("refreshToken", newRefreshToken);
+            tokenData.put("tokenType", "Bearer");
+            tokenData.put("expiresIn", jwtUtil.getAccessTokenExpirationInSeconds()); // 15분 (초 단위)
             
-            return response;
+            return ApiResponse.success(getMessage("SERVICE_015"), tokenData);
             
         } catch (Exception e) {
             logger.error("토큰 재발급 중 예외 발생: {}", e.getMessage(), e);
-            return createErrorResponse("서버 오류가 발생했습니다.");
+            return ApiResponse.error(getMessage("SERVICE_016"), ErrorCode.SERVER_INTERNAL_ERROR);
         }
     }
     
@@ -399,7 +402,7 @@ public class LoginService {
      * @param usrId 사용자 ID
      * @return 로그아웃 결과
      */
-    public Map<String, Object> logout(Long usrId) {
+    public ApiResponse<Object> logout(Long usrId) {
         try {
             logger.info("=== 로그아웃 시작 ===");
             logger.debug("사용자 ID: {}", usrId);
@@ -410,11 +413,11 @@ public class LoginService {
             int logoutResult = loginDao.updateSessionLogout(logoutData);
             logger.debug("세션 로그아웃 처리 결과: {}", logoutResult);
             
-            return createSuccessResponse("로그아웃되었습니다.");
+            return ApiResponse.success(getMessage("SERVICE_017"), null);
             
         } catch (Exception e) {
             logger.error("로그아웃 중 예외 발생: {}", e.getMessage(), e);
-            return createErrorResponse("서버 오류가 발생했습니다.");
+            return ApiResponse.error(getMessage("SERVICE_016"), ErrorCode.SERVER_INTERNAL_ERROR);
         }
     }
     
@@ -424,14 +427,14 @@ public class LoginService {
      * @param usrId 사용자 ID
      * @return 사용자 정보
      */
-    public Map<String, Object> getUserInfo(Long usrId) {
+    public ApiResponse<Map<String, Object>> getUserInfo(Long usrId) {
         try {
             logger.info("=== 사용자 정보 조회 시작 ===");
             logger.debug("사용자 ID: {}", usrId);
             
             Map<String, Object> user = loginDao.findById(usrId);
             if (user == null) {
-                return createErrorResponse("사용자 정보를 찾을 수 없습니다.");
+                return ApiResponse.error(getMessage("SERVICE_014"), ErrorCode.USER_NOT_FOUND);
             }
             
             // 비밀번호 제외한 사용자 정보 반환
@@ -446,38 +449,37 @@ public class LoginService {
             userInfo.put("creDt", user.get("cre_dt"));
             userInfo.put("updDt", user.get("upd_dt"));
             
-            Map<String, Object> response = createSuccessResponse("사용자 정보를 조회했습니다.");
-            response.put("user", userInfo);
-            
-            return response;
+            return ApiResponse.success(getMessage("SERVICE_018"), userInfo);
             
         } catch (Exception e) {
             logger.error("사용자 정보 조회 중 예외 발생: {}", e.getMessage(), e);
-            return createErrorResponse("서버 오류가 발생했습니다.");
+            return ApiResponse.error(getMessage("SERVICE_016"), ErrorCode.SERVER_INTERNAL_ERROR);
         }
     }
     
     // ==================== 응답 생성 헬퍼 함수들 ====================
     
     /**
-     * 성공 응답 생성 (로그인, 로그아웃 등에서 사용)
+     * 메시지 코드로부터 메시지 내용 조회 (Redis 캐시 우선)
+     * 
+     * @param msgCd 메시지 코드
+     * @return 메시지 내용
      */
-    private Map<String, Object> createSuccessResponse(String message) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", message);
-        return response;
+    private String getMessage(String msgCd) {
+        try {
+            Map<String, Object> messageInfo = commonCodeService.getMessageCode(msgCd);
+            if (messageInfo != null && messageInfo.get("msg_cont") != null) {
+                return (String) messageInfo.get("msg_cont");
+            }
+        } catch (Exception e) {
+            logger.warn("메시지 코드 조회 실패: {}, 기본 메시지 사용", msgCd, e);
+        }
+        
+        // 캐시에서 조회 실패 시 간단한 fallback 메시지 반환
+        logger.error("메시지 코드 '{}'를 Redis 캐시에서 찾을 수 없습니다. 데이터베이스에 메시지가 등록되어 있는지 확인하세요.", msgCd);
+        return "시스템 오류가 발생했습니다. 관리자에게 문의하세요.";
     }
     
-    /**
-     * 에러 응답 생성 (로그인, 로그아웃 등에서 사용)
-     */
-    private Map<String, Object> createErrorResponse(String message) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", false);
-        response.put("message", message);
-        return response;
-    }
     
     
     /**

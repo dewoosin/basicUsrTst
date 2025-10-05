@@ -53,7 +53,7 @@ public class SecurityConfig {
             // 요청별 접근 권한 설정
             .authorizeHttpRequests(authz -> authz
                 // 공개 경로 (인증 불필요)
-                .requestMatchers("/api/login", "/api/signup", "/api/check-id", "/api/refresh").permitAll()
+                .requestMatchers("/api/login", "/api/signup", "/api/check-id", "/api/refresh", "/api/auth/**").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                 .requestMatchers("/", "/index.html", "/login.html", "/signup.html", "/dashboard.html").permitAll()
                 // 관리자 전용 경로

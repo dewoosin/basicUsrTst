@@ -2,6 +2,7 @@ package com.nsustest.loginAuth.dao;
 
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -182,4 +183,47 @@ public interface LoginDao {
      * @return 삭제된 행 수
      */
     int cleanupOldRateLimitHistory();
+    
+    // ==================== 공통코드 관련 ====================
+    
+    /**
+     * 공통코드 그룹 정보 조회
+     * 
+     * @param grpCd 그룹 코드
+     * @return 그룹 정보
+     */
+    Map<String, Object> selectCommonCodeGroup(String grpCd);
+    
+    /**
+     * 특정 공통코드 조회
+     * 
+     * @param grpCd 그룹 코드
+     * @param cd 코드
+     * @return 코드 정보
+     */
+    Map<String, Object> selectCommonCode(String grpCd, String cd);
+    
+    /**
+     * 그룹별 공통코드 목록 조회
+     * 
+     * @param grpCd 그룹 코드
+     * @return 코드 목록
+     */
+    List<Map<String, Object>> selectCommonCodeList(String grpCd);
+    
+    /**
+     * 메시지 코드 조회
+     * 
+     * @param msgCd 메시지 코드
+     * @return 메시지 정보
+     */
+    Map<String, Object> selectMessageCode(String msgCd);
+    
+    /**
+     * 타입별 메시지 목록 조회
+     * 
+     * @param msgTpCd 메시지 타입 코드
+     * @return 메시지 목록
+     */
+    List<Map<String, Object>> selectMessageListByType(String msgTpCd);
 }

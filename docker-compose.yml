@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Redis 서비스
+  redis:
+    image: redis:7-alpine
+    container_name: login-auth-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # MySQL 서비스 (기존 데이터베이스)
+  mysql:
+    image: mysql:8.0
+    container_name: login-auth-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: login_auth
+      MYSQL_USER: loginuser
+      MYSQL_PASSWORD: loginpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database_schema.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  redis_data:
+  mysql_data:

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -54,6 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         // Spring Security 인증 객체 생성
                         UserDetails userDetails = createUserDetails(userInfo);
                         
+                        // 사용자 정보를 포함한 인증 객체 생성
                         UsernamePasswordAuthenticationToken authentication = 
                             new UsernamePasswordAuthenticationToken(
                                 userDetails, 
@@ -61,7 +63,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 userDetails.getAuthorities()
                             );
                         
-                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        // 사용자 정보를 인증 객체의 details에 저장
+                        Map<String, Object> userDetailsMap = new HashMap<>();
+                        userDetailsMap.put("usrId", userInfo.get("usrId"));
+                        userDetailsMap.put("usrLoginId", userInfo.get("usrLoginId"));
+                        userDetailsMap.put("usrNm", userInfo.get("usrNm"));
+                        userDetailsMap.put("email", userInfo.get("email"));
+                        authentication.setDetails(userDetailsMap);
                         
                         // SecurityContext에 인증 정보 설정
                         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -101,11 +109,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authority = "ADMIN";
         }
         
-        return User.builder()
+        // 사용자 정보를 UserDetails에 추가로 저장
+        User.UserBuilder builder = User.builder()
                 .username(username)
                 .password("") // JWT에서는 비밀번호 불필요
-                .authorities(authority)
-                .build();
+                .authorities(authority);
+        
+        // 사용자 ID를 추가 속성으로 저장
+        Object usrId = userInfo.get("usrId");
+        if (usrId != null) {
+            builder.disabled(false);
+        }
+        
+        return builder.build();
     }
     
     /**
