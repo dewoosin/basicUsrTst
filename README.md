@@ -563,7 +563,7 @@ public void saveUserSession(...) {
 ./gradlew test jacocoTestReport
 ```
 
-**작성된 테스트:** 9개 클래스, 90개 테스트 케이스 (100% 통과)
+**작성된 테스트:** 9개 클래스, 90개 테스트 케이스 
 
 **커버리지:**
 - Controller: 100% (LoginController)
@@ -572,12 +572,7 @@ public void saveUserSession(...) {
 - Interceptor: 100% (Rate Limiting)
 - Util: 100% (JWT, Message, IP, SecurityContext)
 
-**테스트 계정:**
-```
-아이디: testuser
-비밀번호: password123!
-이메일: test@example.com
-```
+
 
 ## 프로젝트 구조
 
