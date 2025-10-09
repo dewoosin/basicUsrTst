@@ -31,12 +31,12 @@ async function checkIdDuplicate() {
     
     // 입력값 검증
     if (!usrLoginId) {
-        showIdCheckResult('아이디를 입력해주세요.', 'error');
+        showIdCheckResult(getMessage('FRONT_004'), 'error');
         return;
     }
     
     if (!usrLoginId.match(/^[a-zA-Z0-9]{4,20}$/)) {
-        showIdCheckResult('아이디는 영문, 숫자 조합 4-20자로 입력해주세요.', 'error');
+        showIdCheckResult(getMessage('FRONT_005'), 'error');
         return;
     }
     
@@ -55,17 +55,17 @@ async function checkIdDuplicate() {
         
         if (data.success) {
             if (data.data && data.data.duplicate) {
-                showIdCheckResult('이미 사용 중인 아이디입니다.', 'error');
+                showIdCheckResult(getMessage('FRONT_006'), 'error');
             } else {
-                showIdCheckResult(data.message || '사용 가능한 아이디입니다.', 'success');
+                showIdCheckResult(data.message || getMessage('FRONT_007'), 'success');
                 isIdChecked = true; // 중복확인 완료 표시
             }
         } else {
-            showIdCheckResult(data.message || '중복 확인 중 오류가 발생했습니다.', 'error');
+            showIdCheckResult(data.message || getMessage('FRONT_008'), 'error');
         }
     } catch (error) {
         console.error('Error:', error);
-        showIdCheckResult('서버와의 통신 중 오류가 발생했습니다.', 'error');
+        showIdCheckResult(getMessage('FRONT_009'), 'error');
     } finally {
         // 로딩 상태 해제
         checkBtn.disabled = false;
@@ -135,7 +135,7 @@ function validatePasswordMatch() {
     if (confirmPassword && password !== confirmPassword) {
         confirmGroup.classList.add('error');
         confirmGroup.classList.remove('success');
-        showFieldError(confirmGroup, '비밀번호가 일치하지 않습니다.');
+        showFieldError(confirmGroup, getMessage('FRONT_010'));
         return false;
     } else if (confirmPassword) {
         confirmGroup.classList.remove('error');
@@ -173,11 +173,11 @@ function validateForm() {
     
     if (!/^[a-zA-Z0-9]{4,20}$/.test(loginId)) {
         loginIdGroup.classList.add('error');
-        showFieldError(loginIdGroup, '아이디는 영문, 숫자 조합 4-20자여야 합니다.');
+        showFieldError(loginIdGroup, getMessage('FRONT_011'));
         isValid = false;
     } else if (!isIdChecked) {
         loginIdGroup.classList.add('error');
-        showFieldError(loginIdGroup, '아이디 중복확인을 해주세요.');
+        showFieldError(loginIdGroup, getMessage('FRONT_012'));
         isValid = false;
     } else {
         loginIdGroup.classList.remove('error');
@@ -189,7 +189,7 @@ function validateForm() {
     const emailGroup = document.getElementById('email').closest('.form-group');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         emailGroup.classList.add('error');
-        showFieldError(emailGroup, '올바른 이메일 형식이 아닙니다.');
+        showFieldError(emailGroup, getMessage('FRONT_013'));
         isValid = false;
     } else {
         emailGroup.classList.remove('error');
@@ -203,7 +203,7 @@ function validateForm() {
     
     if (strength === 'weak') {
         passwordGroup.classList.add('error');
-        showFieldError(passwordGroup, '비밀번호는 8자 이상, 영문+숫자+특수문자를 포함해야 합니다.');
+        showFieldError(passwordGroup, getMessage('FRONT_014'));
         isValid = false;
     } else {
         passwordGroup.classList.remove('error');
@@ -218,7 +218,7 @@ function validateForm() {
     // 이용약관 동의 검사
     const agreeTerms = document.getElementById('agreeTerms').checked;
     if (!agreeTerms) {
-        showMessage('이용약관에 동의해주세요.', 'error');
+        showMessage(getMessage('FRONT_015'), 'error');
         isValid = false;
     }
     
@@ -263,20 +263,20 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         const result = await response.json();
         
         if (response.ok && result.success) {
-            // 회원가입 성공
-            showMessage(result.message || '회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.', 'success');
+            // 회원가입 성공 - 서버 메시지 우선, 없으면 메시지 코드 사용
+            showMessage(result.message || getMessage('FRONT_016'), 'success');
             
             // 2초 후 로그인 페이지로 이동
             setTimeout(() => {
                 window.location.href = '/login.html';
             }, 2000);
         } else {
-            // 회원가입 실패
-            showMessage(result.message || '회원가입에 실패했습니다.', 'error');
+            // 회원가입 실패 - 서버 메시지 우선, 없으면 메시지 코드 사용
+            showMessage(result.message || getMessage('FRONT_017'), 'error');
         }
     } catch (error) {
         console.error('Signup error:', error);
-        showMessage('서버와의 통신에 실패했습니다.', 'error');
+        showMessage(getMessage('FRONT_003'), 'error');
     } finally {
         // 로딩 상태 해제
         signupBtn.disabled = false;
@@ -300,13 +300,13 @@ document.getElementById('password').addEventListener('input', function() {
         strengthDiv.className = 'password-strength';
         
         if (strength === 'weak') {
-            strengthDiv.textContent = '비밀번호 강도: 약함';
+            strengthDiv.textContent = getMessage('FRONT_018');
             strengthDiv.className += ' strength-weak';
         } else if (strength === 'medium') {
-            strengthDiv.textContent = '비밀번호 강도: 보통';
+            strengthDiv.textContent = getMessage('FRONT_019');
             strengthDiv.className += ' strength-medium';
         } else {
-            strengthDiv.textContent = '비밀번호 강도: 강함';
+            strengthDiv.textContent = getMessage('FRONT_020');
             strengthDiv.className += ' strength-strong';
         }
         

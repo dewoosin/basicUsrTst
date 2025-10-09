@@ -34,12 +34,55 @@ public class JwtUtil {
     
     /**
      * JWT 시크릿 키 생성
+     * 보안을 강화하여 Base64 디코딩 및 키 길이 검증
      * 
      * @return HMAC-SHA256용 시크릿 키
      */
     private SecretKey getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes();
-        return Keys.hmacShaKeyFor(keyBytes);
+        try {
+            byte[] keyBytes;
+            
+            // Base64 인코딩된 키인지 확인
+            if (isBase64Encoded(jwtSecret)) {
+                keyBytes = java.util.Base64.getDecoder().decode(jwtSecret);
+            } else {
+                // 일반 문자열인 경우 UTF-8로 인코딩
+                keyBytes = jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            }
+            
+            // HMAC-SHA256은 최소 256비트(32바이트) 키가 필요
+            if (keyBytes.length < 32) {
+                // 키가 너무 짧으면 패딩
+                byte[] paddedKey = new byte[32];
+                System.arraycopy(keyBytes, 0, paddedKey, 0, Math.min(keyBytes.length, 32));
+                keyBytes = paddedKey;
+            } else if (keyBytes.length > 64) {
+                // 키가 너무 길면 해시하여 32바이트로 축소
+                java.security.MessageDigest sha256 = java.security.MessageDigest.getInstance("SHA-256");
+                keyBytes = sha256.digest(keyBytes);
+            }
+            
+            return Keys.hmacShaKeyFor(keyBytes);
+            
+        } catch (Exception e) {
+            logger.error("JWT 시크릿 키 생성 중 오류: {}", e.getMessage(), e);
+            throw new RuntimeException("JWT 시크릿 키 생성 실패", e);
+        }
+    }
+    
+    /**
+     * Base64 인코딩된 문자열인지 확인
+     * 
+     * @param str 확인할 문자열
+     * @return Base64 인코딩 여부
+     */
+    private boolean isBase64Encoded(String str) {
+        try {
+            java.util.Base64.getDecoder().decode(str);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
     
     /**

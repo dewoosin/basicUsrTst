@@ -17,15 +17,27 @@ services:
       timeout: 3s
       retries: 3
 
+  # Redis Commander - Redis 웹 관리 도구
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: login-auth-redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   # MySQL 서비스 (기존 데이터베이스)
   mysql:
     image: mysql:8.0
-    container_name: login-auth-mysql
+    container_name: loginauth-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: login_auth
-      MYSQL_USER: loginuser
-      MYSQL_PASSWORD: loginpass
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: nsusTestDb
+      MYSQL_USER: nsususer
+      MYSQL_PASSWORD: nsuspass
     ports:
       - "3306:3306"
     volumes:

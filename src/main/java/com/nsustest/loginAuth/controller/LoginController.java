@@ -1,10 +1,7 @@
 package com.nsustest.loginAuth.controller;
 
-import com.nsustest.loginAuth.constants.ErrorCode;
 import com.nsustest.loginAuth.dto.ApiResponse;
-import com.nsustest.loginAuth.service.AuthService;
-import com.nsustest.loginAuth.service.SessionService;
-import com.nsustest.loginAuth.service.UserService;
+import com.nsustest.loginAuth.service.LoginService;
 import com.nsustest.loginAuth.util.IpAddressUtil;
 import com.nsustest.loginAuth.util.SecurityContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +14,9 @@ import java.util.Map;
 /**
  * 로그인 및 회원가입 관련 요청을 처리하는 컨트롤러
  * 
+ * MVC 패턴의 일관성을 위해 LoginService(Facade)만 의존합니다.
+ * Controller -> LoginService -> (AuthService, UserService, SessionService)
+ * 
  * @author nsustest
  */
 @RestController
@@ -25,13 +25,7 @@ import java.util.Map;
 public class LoginController {
     
     @Autowired
-    private UserService userService;
-    
-    @Autowired
-    private AuthService authService;
-    
-    @Autowired
-    private SessionService sessionService;
+    private LoginService loginService;
     
     @Autowired
     private SecurityContextUtil securityContextUtil;
@@ -44,7 +38,7 @@ public class LoginController {
      */
     @GetMapping("/check-id")
     public ResponseEntity<ApiResponse<Map<String, Object>>> checkIdDuplicate(@RequestParam("usrLoginId") String usrLoginId) {
-        ApiResponse<Map<String, Object>> response = userService.checkIdDuplicate(usrLoginId);
+        ApiResponse<Map<String, Object>> response = loginService.checkIdDuplicate(usrLoginId);
         
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -61,7 +55,7 @@ public class LoginController {
      */
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<Map<String, Object>>> signup(@RequestBody Map<String, Object> signupData) {
-        ApiResponse<Map<String, Object>> response = userService.signup(signupData);
+        ApiResponse<Map<String, Object>> response = loginService.signup(signupData);
         
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -84,7 +78,7 @@ public class LoginController {
         loginData.put("ipAddr", clientIp);
         loginData.put("userAgent", request.getHeader("User-Agent"));
         
-        ApiResponse<Map<String, Object>> response = authService.login(loginData);
+        ApiResponse<Map<String, Object>> response = loginService.login(loginData);
         
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -107,12 +101,12 @@ public class LoginController {
         if (refreshToken == null || refreshToken.trim().isEmpty()) {
             ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error(
                 "Refresh Token이 필요합니다.", 
-                ErrorCode.AUTH_TOKEN_INVALID
+                "AUTH_005"
             );
             return ResponseEntity.badRequest().body(errorResponse);
         }
         
-        ApiResponse<Map<String, Object>> response = authService.refreshAccessToken(refreshToken);
+        ApiResponse<Map<String, Object>> response = loginService.refreshAccessToken(refreshToken);
         
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -134,12 +128,12 @@ public class LoginController {
             if (usrId == null) {
                 ApiResponse<Object> errorResponse = ApiResponse.error(
                     "인증이 필요합니다.", 
-                    ErrorCode.AUTH_UNAUTHORIZED
+                    "AUTH_008"
                 );
                 return ResponseEntity.status(401).body(errorResponse);
             }
             
-            ApiResponse<Object> response = sessionService.logout(usrId);
+            ApiResponse<Object> response = loginService.logout(usrId);
             
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
@@ -150,7 +144,7 @@ public class LoginController {
         } catch (Exception e) {
             ApiResponse<Object> errorResponse = ApiResponse.error(
                 "서버 오류가 발생했습니다.", 
-                ErrorCode.SERVER_INTERNAL_ERROR
+                "SRV_001"
             );
             return ResponseEntity.status(500).body(errorResponse);
         }
@@ -168,14 +162,14 @@ public class LoginController {
             Long usrId = securityContextUtil.getCurrentUserId();
             if (usrId == null) {
                 ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error(
-                    ErrorCode.getDescription(ErrorCode.AUTH_UNAUTHORIZED), 
-                    ErrorCode.AUTH_UNAUTHORIZED
+                    "인증이 필요합니다.", 
+                    "AUTH_008"
                 );
                 return ResponseEntity.status(401).body(errorResponse);
             }
             
             // 사용자 정보 조회
-            ApiResponse<Map<String, Object>> response = userService.getUserInfo(usrId);
+            ApiResponse<Map<String, Object>> response = loginService.getUserInfo(usrId);
             
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
@@ -185,8 +179,8 @@ public class LoginController {
             
         } catch (Exception e) {
             ApiResponse<Map<String, Object>> errorResponse = ApiResponse.error(
-                ErrorCode.getDescription(ErrorCode.SERVER_INTERNAL_ERROR), 
-                ErrorCode.SERVER_INTERNAL_ERROR
+                "서버 오류가 발생했습니다.", 
+                "SRV_001"
             );
             return ResponseEntity.status(500).body(errorResponse);
         }

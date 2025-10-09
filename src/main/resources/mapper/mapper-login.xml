@@ -28,6 +28,7 @@
         SELECT usr_id, usr_login_id, usr_nm, email, pwd, usr_tp_cd, phone_num, is_use, cre_dt, upd_dt
         FROM users
         WHERE usr_login_id = #{usrLoginId}
+        LIMIT 1
     </select>
     
     <!-- 사용자 ID로 사용자 정보 조회 쿼리 -->
@@ -35,6 +36,7 @@
         SELECT usr_id, usr_login_id, usr_nm, email, pwd, usr_tp_cd, phone_num, is_use, cre_dt, upd_dt
         FROM users
         WHERE usr_id = #{usrId}
+        LIMIT 1
     </select>
     
     <!-- 사용자 통계 초기화 쿼리 (회원가입 시) -->
@@ -260,6 +262,40 @@
         WHERE msg_tp_cd = #{msgTpCd}
         AND is_use = TRUE
         ORDER BY msg_cd
+    </select>
+    
+    <!-- 모든 공통코드 그룹 조회 (캐시 초기화용) -->
+    <select id="selectAllCommonCodeGroups" resultType="map">
+        SELECT 
+            grp_cd,
+            grp_nm,
+            grp_desc,
+            is_use,
+            upd_dt,
+            upd_id,
+            cre_dt,
+            cre_id
+        FROM cm_cd_grp
+        WHERE is_use = TRUE
+        ORDER BY grp_cd
+    </select>
+    
+    <!-- 모든 메시지 코드 조회 (캐시 초기화용) -->
+    <select id="selectAllMessageCodes" resultType="map">
+        SELECT 
+            msg_cd,
+            msg_tp_cd,
+            msg_nm,
+            msg_cont,
+            msg_desc,
+            is_use,
+            upd_dt,
+            upd_id,
+            cre_dt,
+            cre_id
+        FROM msg_cd
+        WHERE is_use = TRUE
+        ORDER BY msg_tp_cd, msg_cd
     </select>
     
 </mapper>

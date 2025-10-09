@@ -53,30 +53,22 @@ public class CommonCodeService {
     }
     
     /**
-     * 특정 공통코드 조회 (캐시 우선)
+     * 특정 공통코드 조회 (목록에서 필터링)
      * 
      * @param grpCd 그룹 코드
      * @param cd 코드
      * @return 코드 정보
      */
     public Map<String, Object> getCommonCode(String grpCd, String cd) {
-        // 1. 캐시에서 조회
-        Object cached = cacheService.getCommonCode(grpCd, cd);
-        if (cached != null) {
-            logger.debug("공통코드 캐시 HIT: {}:{}", grpCd, cd);
-            return (Map<String, Object>) cached;
+        // 목록에서 해당 코드 검색
+        List<Map<String, Object>> codeList = getCommonCodeList(grpCd);
+        if (codeList != null) {
+            return codeList.stream()
+                    .filter(code -> cd.equals(code.get("cd")))
+                    .findFirst()
+                    .orElse(null);
         }
-        
-        // 2. DB에서 조회
-        logger.debug("공통코드 캐시 MISS, DB 조회: {}:{}", grpCd, cd);
-        Map<String, Object> codeInfo = loginDao.selectCommonCode(grpCd, cd);
-        
-        // 3. 캐시에 저장
-        if (codeInfo != null) {
-            cacheService.setCommonCode(grpCd, cd, codeInfo);
-        }
-        
-        return codeInfo;
+        return null;
     }
     
     /**

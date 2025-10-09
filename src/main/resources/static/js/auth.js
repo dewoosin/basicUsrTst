@@ -49,8 +49,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         console.log('로그인 응답:', result);
         
         if (response.ok && result.success) {
-            // 로그인 성공
-            showMessage(result.message || '로그인되었습니다!', 'success');
+            // 로그인 성공 - 서버 메시지 우선, 없으면 메시지 코드 사용
+            showMessage(result.message || getMessage('FRONT_001'), 'success');
             
             // 사용자 정보 및 토큰 저장 (ApiResponse.data에서 가져오기)
             if (result.data) {
@@ -70,12 +70,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 window.location.href = '/dashboard.html';
             }, 2000);
         } else {
-            // 로그인 실패
-            showMessage(result.message || '로그인에 실패했습니다.', 'error');
+            // 로그인 실패 - 서버 메시지 우선, 없으면 메시지 코드 사용
+            showMessage(result.message || getMessage('FRONT_002'), 'error');
         }
     } catch (error) {
         console.error('Login error:', error);
-        showMessage('서버와의 통신에 실패했습니다.', 'error');
+        showMessage(getMessage('FRONT_003'), 'error');
     } finally {
         // 로딩 상태 해제
         loginBtn.disabled = false;

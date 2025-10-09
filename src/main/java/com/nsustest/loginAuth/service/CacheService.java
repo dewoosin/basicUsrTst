@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +24,6 @@ public class CacheService {
     
     // 캐시 키 접두사
     private static final String COMMON_CODE_GROUP_PREFIX = "common:code:group:";
-    private static final String COMMON_CODE_PREFIX = "common:code:";
     private static final String COMMON_CODE_LIST_PREFIX = "common:code:list:";
     private static final String MESSAGE_CODE_PREFIX = "message:code:";
     private static final String MESSAGE_TYPE_PREFIX = "message:type:";
@@ -47,7 +45,6 @@ public class CacheService {
         try {
             String key = COMMON_CODE_GROUP_PREFIX + grpCd;
             redisTemplate.opsForValue().set(key, groupInfo, COMMON_CODE_TTL, TimeUnit.SECONDS);
-            logger.debug("공통코드 그룹 캐시 저장: {}", key);
         } catch (Exception e) {
             logger.error("공통코드 그룹 캐시 저장 실패: {}", e.getMessage(), e);
         }
@@ -62,50 +59,13 @@ public class CacheService {
     public Object getCommonCodeGroup(String grpCd) {
         try {
             String key = COMMON_CODE_GROUP_PREFIX + grpCd;
-            Object result = redisTemplate.opsForValue().get(key);
-            logger.debug("공통코드 그룹 캐시 조회: {} = {}", key, result != null ? "HIT" : "MISS");
-            return result;
+            return redisTemplate.opsForValue().get(key);
         } catch (Exception e) {
             logger.error("공통코드 그룹 캐시 조회 실패: {}", e.getMessage(), e);
             return null;
         }
     }
     
-    /**
-     * 특정 공통코드를 캐시에 저장
-     * 
-     * @param grpCd 그룹 코드
-     * @param cd 코드
-     * @param codeInfo 코드 정보
-     */
-    public void setCommonCode(String grpCd, String cd, Object codeInfo) {
-        try {
-            String key = COMMON_CODE_PREFIX + grpCd + ":" + cd;
-            redisTemplate.opsForValue().set(key, codeInfo, COMMON_CODE_TTL, TimeUnit.SECONDS);
-            logger.debug("공통코드 캐시 저장: {}", key);
-        } catch (Exception e) {
-            logger.error("공통코드 캐시 저장 실패: {}", e.getMessage(), e);
-        }
-    }
-    
-    /**
-     * 특정 공통코드를 캐시에서 조회
-     * 
-     * @param grpCd 그룹 코드
-     * @param cd 코드
-     * @return 코드 정보
-     */
-    public Object getCommonCode(String grpCd, String cd) {
-        try {
-            String key = COMMON_CODE_PREFIX + grpCd + ":" + cd;
-            Object result = redisTemplate.opsForValue().get(key);
-            logger.debug("공통코드 캐시 조회: {} = {}", key, result != null ? "HIT" : "MISS");
-            return result;
-        } catch (Exception e) {
-            logger.error("공통코드 캐시 조회 실패: {}", e.getMessage(), e);
-            return null;
-        }
-    }
     
     /**
      * 그룹별 공통코드 목록을 캐시에 저장
@@ -117,7 +77,6 @@ public class CacheService {
         try {
             String key = COMMON_CODE_LIST_PREFIX + grpCd;
             redisTemplate.opsForValue().set(key, codeList, COMMON_CODE_TTL, TimeUnit.SECONDS);
-            logger.debug("공통코드 목록 캐시 저장: {}", key);
         } catch (Exception e) {
             logger.error("공통코드 목록 캐시 저장 실패: {}", e.getMessage(), e);
         }
@@ -133,9 +92,7 @@ public class CacheService {
     public List<Object> getCommonCodeList(String grpCd) {
         try {
             String key = COMMON_CODE_LIST_PREFIX + grpCd;
-            Object result = redisTemplate.opsForValue().get(key);
-            logger.debug("공통코드 목록 캐시 조회: {} = {}", key, result != null ? "HIT" : "MISS");
-            return (List<Object>) result;
+            return (List<Object>) redisTemplate.opsForValue().get(key);
         } catch (Exception e) {
             logger.error("공통코드 목록 캐시 조회 실패: {}", e.getMessage(), e);
             return null;
@@ -152,7 +109,6 @@ public class CacheService {
         try {
             String key = MESSAGE_CODE_PREFIX + msgCd;
             redisTemplate.opsForValue().set(key, messageInfo, MESSAGE_CODE_TTL, TimeUnit.SECONDS);
-            logger.debug("메시지 코드 캐시 저장: {}", key);
         } catch (Exception e) {
             logger.error("메시지 코드 캐시 저장 실패: {}", e.getMessage(), e);
         }
@@ -167,9 +123,7 @@ public class CacheService {
     public Object getMessageCode(String msgCd) {
         try {
             String key = MESSAGE_CODE_PREFIX + msgCd;
-            Object result = redisTemplate.opsForValue().get(key);
-            logger.debug("메시지 코드 캐시 조회: {} = {}", key, result != null ? "HIT" : "MISS");
-            return result;
+            return redisTemplate.opsForValue().get(key);
         } catch (Exception e) {
             logger.error("메시지 코드 캐시 조회 실패: {}", e.getMessage(), e);
             return null;
@@ -186,7 +140,6 @@ public class CacheService {
         try {
             String key = MESSAGE_TYPE_PREFIX + msgTpCd;
             redisTemplate.opsForValue().set(key, messageList, MESSAGE_CODE_TTL, TimeUnit.SECONDS);
-            logger.debug("타입별 메시지 목록 캐시 저장: {}", key);
         } catch (Exception e) {
             logger.error("타입별 메시지 목록 캐시 저장 실패: {}", e.getMessage(), e);
         }
@@ -202,9 +155,7 @@ public class CacheService {
     public List<Object> getMessageListByType(String msgTpCd) {
         try {
             String key = MESSAGE_TYPE_PREFIX + msgTpCd;
-            Object result = redisTemplate.opsForValue().get(key);
-            logger.debug("타입별 메시지 목록 캐시 조회: {} = {}", key, result != null ? "HIT" : "MISS");
-            return (List<Object>) result;
+            return (List<Object>) redisTemplate.opsForValue().get(key);
         } catch (Exception e) {
             logger.error("타입별 메시지 목록 캐시 조회 실패: {}", e.getMessage(), e);
             return null;
@@ -237,7 +188,6 @@ public class CacheService {
      */
     public void clearCommonCodeCache() {
         deleteKeysByPattern(COMMON_CODE_GROUP_PREFIX + "*");
-        deleteKeysByPattern(COMMON_CODE_PREFIX + "*");
         deleteKeysByPattern(COMMON_CODE_LIST_PREFIX + "*");
         logger.info("공통코드 캐시 전체 삭제 완료");
     }

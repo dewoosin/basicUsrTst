@@ -1,8 +1,8 @@
 package com.nsustest.loginAuth.service;
 
-import com.nsustest.loginAuth.constants.ErrorCode;
 import com.nsustest.loginAuth.dao.LoginDao;
 import com.nsustest.loginAuth.dto.ApiResponse;
+import com.nsustest.loginAuth.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +31,9 @@ public class UserService {
     @Autowired
     private CommonCodeService commonCodeService;
     
+    @Autowired
+    private MessageUtil messageUtil;
+    
     /**
      * 아이디 중복 확인
      * 
@@ -54,14 +57,14 @@ public class UserService {
             data.put("usrLoginId", usrLoginId);
             
             if (isDuplicate) {
-                return ApiResponse.error(getMessage("USER_003"), ErrorCode.USER_ID_DUPLICATE);
+                return ApiResponse.error(messageUtil.getMessage("USER_003"), "USER_003");
             } else {
-                return ApiResponse.success(getMessage("SERVICE_001"), data);
+                return ApiResponse.success(messageUtil.getMessage("SERVICE_001"), data);
             }
             
         } catch (Exception e) {
             logger.error("아이디 중복 확인 중 예외 발생: {}", e.getMessage(), e);
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.SERVER_INTERNAL_ERROR), ErrorCode.SERVER_INTERNAL_ERROR);
+            return ApiResponse.error("서버 오류가 발생했습니다.", "SRV_001");
         }
     }
     
@@ -111,14 +114,14 @@ public class UserService {
                 responseData.put("usrLoginId", usrLoginId);
                 responseData.put("email", email);
                 
-                return ApiResponse.success(getMessage("SERVICE_002"), responseData);
+                return ApiResponse.success(messageUtil.getMessage("SERVICE_002"), responseData);
             } else {
-                return ApiResponse.error(getMessage("SERVICE_003"), ErrorCode.SERVER_INTERNAL_ERROR);
+                return ApiResponse.error(messageUtil.getMessage("SERVICE_003"), "SRV_001");
             }
             
         } catch (Exception e) {
             logger.error("회원가입 중 예외 발생: {}", e.getMessage(), e);
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.SERVER_INTERNAL_ERROR), ErrorCode.SERVER_INTERNAL_ERROR);
+            return ApiResponse.error("서버 오류가 발생했습니다.", "SRV_001");
         }
     }
     
@@ -133,7 +136,7 @@ public class UserService {
             
             Map<String, Object> user = loginDao.findById(usrId);
             if (user == null) {
-                return ApiResponse.error(getMessage("SERVICE_014"), ErrorCode.USER_NOT_FOUND);
+                return ApiResponse.error(messageUtil.getMessage("SERVICE_014"), "USER_001");
             }
             
             // 비밀번호 제외한 사용자 정보 반환
@@ -148,11 +151,11 @@ public class UserService {
             userInfo.put("creDt", user.get("cre_dt"));
             userInfo.put("updDt", user.get("upd_dt"));
             
-            return ApiResponse.success(getMessage("SERVICE_018"), userInfo);
+            return ApiResponse.success(messageUtil.getMessage("SERVICE_018"), userInfo);
             
         } catch (Exception e) {
             logger.error("사용자 정보 조회 중 예외 발생: {}", e.getMessage(), e);
-            return ApiResponse.error(getMessage("SERVICE_016"), ErrorCode.SERVER_INTERNAL_ERROR);
+            return ApiResponse.error(messageUtil.getMessage("SERVICE_016"), "SRV_001");
         }
     }
     
@@ -163,14 +166,14 @@ public class UserService {
      */
     private ApiResponse<Map<String, Object>> validateLoginId(String usrLoginId) {
         if (usrLoginId == null || usrLoginId.trim().isEmpty()) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.VALIDATION_REQUIRED_FIELD), ErrorCode.VALIDATION_REQUIRED_FIELD);
+            return ApiResponse.error(messageUtil.getMessage("VAL_001"), "VAL_001");
         }
         
         if (!usrLoginId.matches("^[a-zA-Z0-9]{4,20}$")) {
-            return ApiResponse.error(getMessage("SERVICE_006"), ErrorCode.VALIDATION_INVALID_FORMAT);
+            return ApiResponse.error(messageUtil.getMessage("SERVICE_006"), "VAL_002");
         }
         
-        return ApiResponse.success(getMessage("SERVICE_007"), null);
+        return ApiResponse.success(messageUtil.getMessage("SERVICE_007"), null);
     }
     
     /**
@@ -190,28 +193,28 @@ public class UserService {
         
         // 이름 검증
         if (usrNm == null || usrNm.trim().isEmpty()) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.VALIDATION_REQUIRED_FIELD), ErrorCode.VALIDATION_REQUIRED_FIELD);
+            return ApiResponse.error(messageUtil.getMessage("VAL_001"), "VAL_001");
         }
         
         // 이메일 검증
         if (email == null || email.trim().isEmpty()) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.VALIDATION_REQUIRED_FIELD), ErrorCode.VALIDATION_REQUIRED_FIELD);
+            return ApiResponse.error(messageUtil.getMessage("VAL_001"), "VAL_001");
         }
         
         if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
-            return ApiResponse.error(getMessage("SERVICE_008"), ErrorCode.VALIDATION_INVALID_FORMAT);
+            return ApiResponse.error(messageUtil.getMessage("SERVICE_008"), "VAL_002");
         }
         
         // 비밀번호 검증
         if (password == null || password.trim().isEmpty()) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.VALIDATION_REQUIRED_FIELD), ErrorCode.VALIDATION_REQUIRED_FIELD);
+            return ApiResponse.error(messageUtil.getMessage("VAL_001"), "VAL_001");
         }
         
         if (!password.matches("^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$")) {
-            return ApiResponse.error(getMessage("PWD_005"), ErrorCode.PASSWORD_TOO_WEAK);
+            return ApiResponse.error(messageUtil.getMessage("PWD_005"), "PWD_002");
         }
         
-        return ApiResponse.success(getMessage("SERVICE_009"), null);
+        return ApiResponse.success(messageUtil.getMessage("SERVICE_009"), null);
     }
     
     /**
@@ -221,20 +224,20 @@ public class UserService {
         // 아이디 중복 확인
         int idCount = loginDao.checkIdDuplicate(usrLoginId);
         if (idCount > 0) {
-            return ApiResponse.error(getMessage("USER_003"), ErrorCode.USER_ID_DUPLICATE);
+            return ApiResponse.error(messageUtil.getMessage("USER_003"), "USER_003");
         }
         
         // 이메일 중복 확인
         int emailCount = loginDao.checkEmailDuplicate(email);
         if (emailCount > 0) {
-            return ApiResponse.error(getMessage("USER_004"), ErrorCode.USER_EMAIL_DUPLICATE);
+            return ApiResponse.error(messageUtil.getMessage("USER_004"), "USER_004");
         }
         
         // 성공 응답
         Map<String, Object> data = new HashMap<>();
         data.put("usrLoginId", usrLoginId);
         data.put("email", email);
-        return ApiResponse.success(getMessage("SERVICE_011"), data);
+        return ApiResponse.success(messageUtil.getMessage("SERVICE_011"), data);
     }
     
     /**
@@ -248,22 +251,5 @@ public class UserService {
         userData.put("password", encodedPassword);
         userData.put("phoneNum", signupData.get("phoneNum"));
         return userData;
-    }
-    
-    /**
-     * 메시지 코드로부터 메시지 내용 조회
-     */
-    private String getMessage(String msgCd) {
-        try {
-            Map<String, Object> messageInfo = commonCodeService.getMessageCode(msgCd);
-            if (messageInfo != null && messageInfo.get("msg_cont") != null) {
-                return (String) messageInfo.get("msg_cont");
-            }
-        } catch (Exception e) {
-            logger.warn("메시지 코드 조회 실패: {}, 기본 메시지 사용", msgCd, e);
-        }
-        
-        logger.error("메시지 코드 '{}'를 Redis 캐시에서 찾을 수 없습니다.", msgCd);
-        return "시스템 오류가 발생했습니다. 관리자에게 문의하세요.";
     }
 }

@@ -1,9 +1,9 @@
 package com.nsustest.loginAuth.service;
 
-import com.nsustest.loginAuth.constants.ErrorCode;
 import com.nsustest.loginAuth.dao.LoginDao;
 import com.nsustest.loginAuth.dto.ApiResponse;
 import com.nsustest.loginAuth.util.JwtUtil;
+import com.nsustest.loginAuth.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +39,9 @@ public class AuthService {
     @Autowired
     private SessionService sessionService;
     
+    @Autowired
+    private MessageUtil messageUtil;
+    
     /**
      * 로그인 처리
      * 
@@ -62,7 +65,7 @@ public class AuthService {
             if (ipAddr != null) {
                 Map<String, Object> blockedInfo = loginDao.checkIpBlocked(ipAddr);
                 if (blockedInfo != null) {
-                    return ApiResponse.error(getMessage("SERVICE_004"), ErrorCode.AUTH_ACCOUNT_DISABLED);
+                    return ApiResponse.error(messageUtil.getMessage("SERVICE_004"), "AUTH_003");
                 }
             }
             
@@ -73,7 +76,7 @@ public class AuthService {
                 if (ipAddr != null) {
                     recordLoginFailure(usrLoginId, ipAddr, "사용자 없음");
                 }
-                return ApiResponse.error(getMessage("AUTH_001"), ErrorCode.AUTH_INVALID_CREDENTIALS);
+                return ApiResponse.error(messageUtil.getMessage("AUTH_001"), "AUTH_001");
             }
             
             // 계정 상태 및 비밀번호 검증
@@ -116,11 +119,11 @@ public class AuthService {
                 "email", user.get("email")
             ));
             
-            return ApiResponse.success(getMessage("SERVICE_005"), authData);
+            return ApiResponse.success(messageUtil.getMessage("SERVICE_005"), authData);
             
         } catch (Exception e) {
             logger.error("로그인 중 예외 발생: {}", e.getMessage(), e);
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.SERVER_INTERNAL_ERROR), ErrorCode.SERVER_INTERNAL_ERROR);
+            return ApiResponse.error("서버 오류가 발생했습니다.", "SRV_001");
         }
     }
     
@@ -136,14 +139,14 @@ public class AuthService {
             // Refresh Token으로 세션 검증
             Map<String, Object> sessionInfo = loginDao.findSessionByRefreshToken(refreshToken);
             if (sessionInfo == null) {
-                return ApiResponse.error(getMessage("SERVICE_013"), ErrorCode.AUTH_REFRESH_TOKEN_INVALID);
+                return ApiResponse.error(messageUtil.getMessage("SERVICE_013"), "AUTH_007");
             }
             
             // 사용자 정보 조회
             Long usrId = ((Number) sessionInfo.get("usr_id")).longValue();
             Map<String, Object> user = loginDao.findById(usrId);
             if (user == null) {
-                return ApiResponse.error(getMessage("SERVICE_014"), ErrorCode.USER_NOT_FOUND);
+                return ApiResponse.error(messageUtil.getMessage("SERVICE_014"), "USER_001");
             }
             
             // 새로운 Access Token 생성
@@ -162,11 +165,11 @@ public class AuthService {
             tokenData.put("tokenType", "Bearer");
             tokenData.put("expiresIn", jwtUtil.getAccessTokenExpirationInSeconds());
             
-            return ApiResponse.success(getMessage("SERVICE_015"), tokenData);
+            return ApiResponse.success(messageUtil.getMessage("SERVICE_015"), tokenData);
             
         } catch (Exception e) {
             logger.error("토큰 재발급 중 예외 발생: {}", e.getMessage(), e);
-            return ApiResponse.error(getMessage("SERVICE_016"), ErrorCode.SERVER_INTERNAL_ERROR);
+            return ApiResponse.error(messageUtil.getMessage("SERVICE_016"), "SRV_001");
         }
     }
     
@@ -180,14 +183,14 @@ public class AuthService {
         String password = (String) loginData.get("password");
         
         if (usrLoginId == null || usrLoginId.trim().isEmpty()) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.VALIDATION_REQUIRED_FIELD), ErrorCode.VALIDATION_REQUIRED_FIELD);
+            return ApiResponse.error(messageUtil.getMessage("VAL_001"), "VAL_001");
         }
         
         if (password == null || password.trim().isEmpty()) {
-            return ApiResponse.error(ErrorCode.getDescription(ErrorCode.VALIDATION_REQUIRED_FIELD), ErrorCode.VALIDATION_REQUIRED_FIELD);
+            return ApiResponse.error(messageUtil.getMessage("VAL_001"), "VAL_001");
         }
         
-        return ApiResponse.success(getMessage("SERVICE_010"), null);
+        return ApiResponse.success(messageUtil.getMessage("SERVICE_010"), null);
     }
     
     /**
@@ -205,16 +208,16 @@ public class AuthService {
         }
         
         if (!isUse) {
-            return ApiResponse.error(getMessage("AUTH_003"), ErrorCode.AUTH_ACCOUNT_DISABLED);
+            return ApiResponse.error(messageUtil.getMessage("AUTH_003"), "AUTH_003");
         }
         
         // 비밀번호 확인
         String storedPassword = (String) user.get("pwd");
         if (!passwordEncoder.matches(password, storedPassword)) {
-            return ApiResponse.error(getMessage("AUTH_001"), ErrorCode.AUTH_INVALID_CREDENTIALS);
+            return ApiResponse.error(messageUtil.getMessage("AUTH_001"), "AUTH_001");
         }
         
-        return ApiResponse.success(getMessage("SERVICE_012"), null);
+        return ApiResponse.success(messageUtil.getMessage("SERVICE_012"), null);
     }
     
     /**
@@ -244,22 +247,5 @@ public class AuthService {
         } catch (Exception e) {
             logger.warn("로그인 실패 시도 기록 중 오류: {}", e.getMessage(), e);
         }
-    }
-    
-    /**
-     * 메시지 코드로부터 메시지 내용 조회
-     */
-    private String getMessage(String msgCd) {
-        try {
-            Map<String, Object> messageInfo = commonCodeService.getMessageCode(msgCd);
-            if (messageInfo != null && messageInfo.get("msg_cont") != null) {
-                return (String) messageInfo.get("msg_cont");
-            }
-        } catch (Exception e) {
-            logger.warn("메시지 코드 조회 실패: {}, 기본 메시지 사용", msgCd, e);
-        }
-        
-        logger.error("메시지 코드 '{}'를 Redis 캐시에서 찾을 수 없습니다.", msgCd);
-        return "시스템 오류가 발생했습니다. 관리자에게 문의하세요.";
     }
 }

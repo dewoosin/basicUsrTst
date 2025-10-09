@@ -226,4 +226,18 @@ public interface LoginDao {
      * @return 메시지 목록
      */
     List<Map<String, Object>> selectMessageListByType(String msgTpCd);
+    
+    /**
+     * 모든 공통코드 그룹 조회 (캐시 초기화용)
+     * 
+     * @return 모든 그룹 목록
+     */
+    List<Map<String, Object>> selectAllCommonCodeGroups();
+    
+    /**
+     * 모든 메시지 코드 조회 (캐시 초기화용)
+     * 
+     * @return 모든 메시지 목록
+     */
+    List<Map<String, Object>> selectAllMessageCodes();
 }

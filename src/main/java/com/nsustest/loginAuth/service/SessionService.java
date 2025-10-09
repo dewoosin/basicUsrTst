@@ -1,9 +1,9 @@
 package com.nsustest.loginAuth.service;
 
-import com.nsustest.loginAuth.constants.ErrorCode;
 import com.nsustest.loginAuth.dao.LoginDao;
 import com.nsustest.loginAuth.dto.ApiResponse;
 import com.nsustest.loginAuth.util.JwtUtil;
+import com.nsustest.loginAuth.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +32,9 @@ public class SessionService {
     @Autowired
     private CommonCodeService commonCodeService;
     
+    @Autowired
+    private MessageUtil messageUtil;
+    
     /**
      * 로그아웃 처리
      * 
@@ -46,11 +49,11 @@ public class SessionService {
             logoutData.put("usrId", usrId);
             loginDao.updateSessionLogout(logoutData);
             
-            return ApiResponse.success(getMessage("SERVICE_017"), null);
+            return ApiResponse.success(messageUtil.getMessage("SERVICE_017"), null);
             
         } catch (Exception e) {
             logger.error("로그아웃 중 예외 발생: {}", e.getMessage(), e);
-            return ApiResponse.error(getMessage("SERVICE_016"), ErrorCode.SERVER_INTERNAL_ERROR);
+            return ApiResponse.error(messageUtil.getMessage("SERVICE_016"), "SRV_001");
         }
     }
     
@@ -119,22 +122,5 @@ public class SessionService {
         } catch (Exception e) {
             logger.warn("로그인 성공 처리 중 오류: {}", e.getMessage(), e);
         }
-    }
-    
-    /**
-     * 메시지 코드로부터 메시지 내용 조회
-     */
-    private String getMessage(String msgCd) {
-        try {
-            Map<String, Object> messageInfo = commonCodeService.getMessageCode(msgCd);
-            if (messageInfo != null && messageInfo.get("msg_cont") != null) {
-                return (String) messageInfo.get("msg_cont");
-            }
-        } catch (Exception e) {
-            logger.warn("메시지 코드 조회 실패: {}, 기본 메시지 사용", msgCd, e);
-        }
-        
-        logger.error("메시지 코드 '{}'를 Redis 캐시에서 찾을 수 없습니다.", msgCd);
-        return "시스템 오류가 발생했습니다. 관리자에게 문의하세요.";
     }
 }

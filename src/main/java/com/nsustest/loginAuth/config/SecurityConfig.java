@@ -54,6 +54,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // 공개 경로 (인증 불필요)
                 .requestMatchers("/api/login", "/api/signup", "/api/check-id", "/api/refresh", "/api/auth/**").permitAll()
+                .requestMatchers("/api/messages/**").permitAll() // 프론트엔드 메시지 API 공개
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                 .requestMatchers("/", "/index.html", "/login.html", "/signup.html", "/dashboard.html").permitAll()
                 // 관리자 전용 경로
